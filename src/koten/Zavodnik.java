@@ -1,5 +1,8 @@
 package koten;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 /**
  *
  * @author TOMKO
@@ -12,11 +15,12 @@ public class Zavodnik implements Comparable<Zavodnik> {
     private static int pocitadloStartNum = 1;
     private boolean poplatek;
     private int rocnik;
-    private String pohlavi;
+    private LocalDate DOB;
+    private Gender pohlavi;
     private String klub;
-    private long startTime;
-    private long endTime;
-    private long finalTime;
+    private Time startTime;
+    private int endTime;
+    private int finalTime;
 
     public Zavodnik(String name, String surname) {
         this.jmeno = name;
@@ -25,7 +29,7 @@ public class Zavodnik implements Comparable<Zavodnik> {
         pocitadloStartNum++;
     }
 
-    private Zavodnik(Zavodnik zav) {
+    public Zavodnik(Zavodnik zav) {
         this.jmeno = zav.jmeno;
         this.prijmeni = zav.prijmeni;
         this.startNum = zav.startNum;
@@ -36,15 +40,14 @@ public class Zavodnik implements Comparable<Zavodnik> {
         this.endTime = zav.endTime;
     }
 
-    public Zavodnik getZavodnik() {
-        Zavodnik seznam = new Zavodnik(this.jmeno, this.prijmeni, this.startNum);
-        seznam.klub = this.klub;
-        seznam.pohlavi = this.pohlavi;
-        seznam.rocnik = this.rocnik;
-        seznam.poplatek = this.poplatek;
-        return seznam;
-    }
-
+//    public Zavodnik getZavodnik() {
+//        Zavodnik seznam = new Zavodnik(this.jmeno, this.prijmeni, this.startNum);
+//        seznam.klub = this.klub;
+//        seznam.pohlavi = this.pohlavi;
+//        seznam.rocnik = this.rocnik;
+//        seznam.poplatek = this.poplatek;
+//        return seznam;
+//    }
     public String getJmeno() {
         return jmeno;
     }
@@ -53,16 +56,28 @@ public class Zavodnik implements Comparable<Zavodnik> {
         return prijmeni;
     }
 
+
     public int getStartCislo() {
         return startNum;
     }
 
-    public long getStartTime() {
-        return startTime;
+    public int getStartTime() {
+        return startTime.timeToSeconds();
     }
 
-    public void setPohlavi(boolean gender) {
-        this.pohlavi = gender ? "Muž" : "Žena";
+    public Gender getPohlavi() {
+        return pohlavi;
+    }
+
+    public void setDOB(String dob){
+        this.DOB=LocalDate.parse(dob,DateTimeFormatter.ISO_DATE);
+    }
+    public void setPohlavi(char gender) {
+        if (gender == 'f' || gender == 'F' || gender == 'w') {
+            this.pohlavi = Gender.F;
+        } else {
+            this.pohlavi = Gender.M;
+        }
     }
 
     public void setRocnik(int year) {
@@ -70,47 +85,59 @@ public class Zavodnik implements Comparable<Zavodnik> {
     }
 
     public void setKlub(String club) {
-        this.klub = club;
+        if (!klub.matches("^[A-Z]{2,5}$")) {
+            new IllegalArgumentException("Nevalidni nazev klubu.");
+        } else {
+            this.klub = club;
+        }
     }
 
-    public void setStartTime(long time) {
-        this.startTime = time;
+    public void setStartTime(int time) {
+        this.startTime = new Time(time);
     }
 
     public void setStartTime(int hours, int minutes, int seconds) {
-        this.startTime = TimeTools.timeToSeconds(hours, minutes, seconds);
+        this.startTime = new Time(hours, minutes, seconds);
     }
 
     public void setStartTime(String time) {//9:12:0
-        this.startTime = TimeTools.stringToSeconds(time);
+        this.startTime = new Time(time);
     }
 
-    public void setEndTime(long time) {
+    public void setEndTime(int time) {
+        if (startTime == null) {
+            throw new startTimeNotSet("Nebyl zadán startovní čas");
+        }
         this.endTime = time;
     }
 
     public void setEndTime(int hours, int minutes, int seconds) {
+        if (startTime == null) {
+            throw new startTimeNotSet("Nebyl zadán startovní čas");
+        }
         this.endTime = TimeTools.timeToSeconds(hours, minutes, seconds);
     }
 
     public void setEndTime(String time) {//9:12:0
+        if (startTime == null) {
+            throw new startTimeNotSet("Nebyl zadán startovní čas");
+        }
         this.endTime = TimeTools.stringToSeconds(time);
     }
 
-    public long runTime() {
-        return endTime - startTime;
+    public int runTime() {
+        return endTime - startTime.timeToSeconds();
 
     }
 
-    public long getRunTime() {
-        if (finalTime == 0 && startTime != 0 && endTime != 0) {
+    public int getRunTime() {
+        if (finalTime == 0 && startTime != null && endTime != 0) {
             this.finalTime = runTime();
         }
         return finalTime;
     }
 
     /**
-     *
      * @param zav
      * @return
      */
@@ -122,7 +149,24 @@ public class Zavodnik implements Comparable<Zavodnik> {
     @Override
     public String toString() {
         return String.format("%10s %10s, %5d %15s %15s %15s %n ",
-                jmeno, prijmeni, startNum, TimeTools.secondsToTime(startTime), TimeTools.secondsToTime(endTime), TimeTools.secondsToTime(getRunTime()));
+                jmeno, prijmeni, startNum, TimeTools.secondsToTime(startTime.timeToSeconds()), TimeTools.secondsToTime(endTime), TimeTools.secondsToTime(getRunTime()));
+    }
+
+    public static void main(String[] args) {
+        Zavodnik prvni = new Zavodnik("Dominik", "Šefr");
+        prvni.setStartTime(1, 15, 30);
+        try {
+            prvni.setEndTime(2, 30, 60);
+            System.out.println(prvni);
+        } catch (startTimeNotSet e) {
+            System.out.println(e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Chyba");
+
+        }
+        Zavodnik druhy = new Zavodnik("Radek", "Mocek");
+        System.out.println(druhy);
+        prvni.setKlub("AAABA");
     }
 
 }

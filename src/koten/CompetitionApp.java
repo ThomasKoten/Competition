@@ -37,7 +37,7 @@ public class CompetitionApp {
         
         System.out.println("Zadej rozdíl startovního času následujícího závodníka: ");
         int offset=sc.nextInt();
-        long parsedTime=TimeTools.stringToSeconds(input);
+        int parsedTime=TimeTools.stringToSeconds(input);
         competition.setRunStartTime(offset, parsedTime);
         
     }
